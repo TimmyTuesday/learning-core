@@ -1,24 +1,37 @@
-"""Übung 03 – fülle die drei Funktionen aus. Tests: pytest exercises/03_missing_data"""
+"""Übung 03 – Musterlösung (Branch `solutions`)."""
+import numpy as np
 import pandas as pd
 
 
 def missing_patterns(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    # TODO: je Missingness-Muster über `cols` eine Zeile:
-    #   eine bool-Spalte pro col (True = fehlt), dazu `n` (int) und `pct` (0–100)
-    #   absteigend nach n sortiert, Index 0..k-1
-    raise NotImplementedError
+    # isna() liefert pro Zeile das Muster; value_counts zählt identische Muster
+    pat = (
+        df[cols].isna()
+        .value_counts(sort=False)          # Series mit MultiIndex aus bools
+        .rename("n")
+        .reset_index()
+        .sort_values("n", ascending=False, kind="stable")
+        .reset_index(drop=True)
+    )
+    pat["n"] = pat["n"].astype(int)
+    pat["pct"] = 100 * pat["n"] / len(df)
+    return pat[cols + ["n", "pct"]]
 
 
 def missing_vs_observed(df: pd.DataFrame, target: str, covariates: list[str]) -> pd.DataFrame:
-    # TODO: Index = covariates; Spalten mean_observed, mean_missing, diff, smd
-    #   mean_missing = Mittelwert der Kovariate dort, wo `target` fehlt
-    #   diff = mean_missing - mean_observed
-    #   smd  = diff / sqrt((var_missing + var_observed) / 2)   (var mit ddof=1)
-    raise NotImplementedError
+    miss = df[target].isna()
+    rows = {}
+    for c in covariates:
+        m, o = df.loc[miss, c].dropna(), df.loc[~miss, c].dropna()
+        diff = m.mean() - o.mean()
+        smd = diff / np.sqrt((m.var(ddof=1) + o.var(ddof=1)) / 2)
+        rows[c] = {"mean_observed": o.mean(), "mean_missing": m.mean(), "diff": diff, "smd": smd}
+    return pd.DataFrame.from_dict(rows, orient="index")[["mean_observed", "mean_missing", "diff", "smd"]]
 
 
 def impute_group_mean(df: pd.DataFrame, target: str, by: str) -> pd.DataFrame:
-    # TODO: Kopie zurückgeben, in der fehlende `target`-Werte durch den Mittelwert
-    #   der beobachteten Werte derselben `by`-Gruppe ersetzt sind,
-    #   plus bool-Spalte f"{target}_imputed". Eingabe nicht verändern.
-    raise NotImplementedError
+    out = df.copy()
+    out[f"{target}_imputed"] = out[target].isna()
+    # transform("mean") ignoriert NaN und gibt einen Wert pro Zeile zurück (Index bleibt)
+    out[target] = out[target].fillna(out.groupby(by)[target].transform("mean"))
+    return out
