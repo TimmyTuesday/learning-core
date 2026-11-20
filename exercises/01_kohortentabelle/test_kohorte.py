@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from data import make_cohort  # noqa: E402
+from data_01 import make_cohort  # noqa: E402
 from kohorte import clean, missing_report, table_one  # noqa: E402
 
 

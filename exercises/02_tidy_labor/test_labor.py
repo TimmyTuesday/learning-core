@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from data import make_lab_export  # noqa: E402
+from data_02 import make_lab_export  # noqa: E402
 from labor import change_from_baseline, to_long, to_numeric_de  # noqa: E402
 
 

@@ -7,7 +7,7 @@ zu Monat 0, 6 und 12) – im Wide-Format und mit allen Eigenheiten deutscher Lab
 Schau dir die Daten zuerst an:
 
 ```python
-from data import make_lab_export
+from data_02 import make_lab_export
 raw = make_lab_export()
 print(raw.head()); print(raw.dtypes)
 ```
